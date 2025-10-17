@@ -11,3 +11,4 @@ obj/
 # Ignorar logs
 logs/
 *.log
+.vs/
