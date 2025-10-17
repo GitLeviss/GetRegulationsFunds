@@ -1,3 +1,13 @@
-.vs/
-.bin/
-.objm/
+# Ignorar pastas de build e output do .NET
+bin/
+obj/
+
+# Ignorar arquivos de usuário do Visual Studio
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Ignorar logs
+logs/
+*.log
