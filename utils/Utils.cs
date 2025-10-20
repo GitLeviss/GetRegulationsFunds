@@ -203,14 +203,18 @@ namespace GetRegulationsIdctvm.utils
         {
             public int Skipped { get; set; }
             public int Updated { get; set; }
+            public int Missing { get; set; }                         // novos
             public List<string> FundosAtualizados { get; } = new();
+            public List<string> FundosSemRegulamento { get; } = new();
         }
 
         public static void PrintSummary(DownloadSummary s)
         {
-            Console.WriteLine($"Resumo: Não baixados = {s.Skipped} | Atualizados = {s.Updated}");
+            Console.WriteLine($"Resumo: Não baixados = {s.Skipped} | Atualizados = {s.Updated} | Sem regulamento = {s.Missing}");
             if (s.FundosAtualizados.Count > 0)
                 Console.WriteLine("Fundos atualizados: " + string.Join(", ", s.FundosAtualizados.Distinct()));
+            if (s.FundosSemRegulamento.Count > 0)
+                Console.WriteLine("Fundos sem regulamento: " + string.Join(", ", s.FundosSemRegulamento.Distinct()));
         }
 
         public async Task ValidateDownloadAndLength(
