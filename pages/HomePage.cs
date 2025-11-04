@@ -11,6 +11,9 @@ using static Microsoft.Playwright.Assertions;
 
 namespace GetRegulationsIdctvm.pages
 {
+
+
+
     public class HomePage
     {
         Utils utils;
@@ -22,7 +25,6 @@ namespace GetRegulationsIdctvm.pages
             this.page = page;
             utils = new Utils(page);
         }
-
 
         public async Task GetRegulation()
         {
@@ -40,9 +42,11 @@ namespace GetRegulationsIdctvm.pages
 
             for (int i = 1; i < total; i++)
             {
+                // Declara fundName fora do try para ser acessível no catch em caso de falha
+                string fundName = "Desconhecido";
                 try
                 {
-                    string fundName = await page.FrameLocator("frame[name=\"Main\"]").Locator(el.NameFundOnTable(i.ToString())).InnerTextAsync();
+                    fundName = await page.FrameLocator("frame[name=\"Main\"]").Locator(el.NameFundOnTable(i.ToString())).InnerTextAsync();
                     string typeFund = await page.FrameLocator("frame[name=\"Main\"]").Locator(el.TypeFundOnTable(i.ToString())).InnerTextAsync();
 
                     await utils.ClickInFrame(el.NameFundOnTable(i.ToString()), $"click on table position {i} at document manager page");
@@ -99,34 +103,48 @@ namespace GetRegulationsIdctvm.pages
                         summary
                     );
 
+
+
+
+                  
+
+
+                    //HttpClient httpClient = new HttpClient();
+
+                    //var response = await httpClient.PostAsync("https://n8n.zitec.ai/webhook/FundoParametros");
+
+
+
                     await popup.WaitForLoadStateAsync();
                     await popup.CloseAsync();
 
                     await ResetToHome();
-                    Utils.PrintSummary(summary);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Falha ao processar fundo. Detalhe: {ex.Message}");
+                    // Captura a falha e adiciona ao resumo
+                    Console.WriteLine($"Falha ao processar fundo '{fundName}'. Detalhe: {ex.Message}");
+                    summary.Failed++;
+                    summary.FundosComFalha.Add(fundName);
                     await ResetToHome();
                 }
             }
 
-            async Task ResetToHome()
-            {
-                await page.BringToFrontAsync();
-                await Task.Delay(200);
-                await utils.ReloadPageToResetHome();
-                await Task.Delay(1000);
-                await utils.WriteInFrame(el.InputCnpj, "16.695.922/0001-09", "insert cnpj of IDCTVM on input cnpj at home page");
-                await utils.ClickInFrame(el.ButtonContiue, "click on button continue at home page");
-                await Task.Delay(1000);
-                await utils.ClickInFrame(el.Redirect, "click on redirect link at home page");
-                await Task.Delay(3000);
-            }
+            // Chama o resumo final uma única vez, após o loop, passando o total de fundos.
+            Utils.PrintSummary(summary, total);
         }
 
-
-
+        async Task ResetToHome()
+        {
+            await page.BringToFrontAsync();
+            await Task.Delay(200);
+            await utils.ReloadPageToResetHome();
+            await Task.Delay(1000);
+            await utils.WriteInFrame(el.InputCnpj, "16.695.922/0001-09", "insert cnpj of IDCTVM on input cnpj at home page");
+            await utils.ClickInFrame(el.ButtonContiue, "click on button continue at home page");
+            await Task.Delay(1000);
+            await utils.ClickInFrame(el.Redirect, "click on redirect link at home page");
+            await Task.Delay(3000);
+        }
     }
 }
