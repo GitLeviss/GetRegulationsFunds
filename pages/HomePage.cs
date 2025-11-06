@@ -53,7 +53,7 @@ namespace GetRegulationsIdctvm.pages
                     Console.WriteLine($"Name Fund: {fundName}, Type Fund -> {typeFund}");
 
                     var popupTask = page.Context.WaitForPageAsync();
-                    await Task.Delay(2000);
+                    await Task.Delay(3500);
 
                     // Se não houver link/cta para abrir gerenciador, marque como sem regulamento e continue
                     if (!await page.FrameLocator("frame[name=\"Main\"]").Locator(el.ClickHere).IsVisibleAsync())
@@ -67,7 +67,7 @@ namespace GetRegulationsIdctvm.pages
 
                     await utils.ClickInFrame(el.ClickHere, "click on link here at home page");
                     var popup = await popupTask;
-                    await Task.Delay(1500);
+                    await Task.Delay(3000);
 
                     // Filtro "Regulamento"
                     await utils.Write(popup, el.RegulationsField, "Regulamento", "insert text Regulamento on regulations field at home page");
@@ -86,12 +86,20 @@ namespace GetRegulationsIdctvm.pages
                         continue;
                     }
 
-                    string referenceDate = await popup.Locator(el.ReferenceDateOnTable).InnerTextAsync();
+                    string referenceDate = await popup.Locator(el.ReferenceDateOnTable(fundName)).InnerTextAsync();
+
+                    if(referenceDate is null)
+                    {
+                        await popup.CloseAsync();
+                        await ResetToHome();
+                        continue;
+                    }
+
                     var regulationData = (await popup.Locator(el.FirstRegulation).InnerTextAsync())
                                        + (await popup.Locator(el.FirstName).InnerTextAsync());
                     Console.WriteLine($"Info of current Download: {regulationData}");
 
-                    await Task.Delay(1500);
+                    await Task.Delay(3000);
 
                     await utils.ValidateDownloadAndLength(
                         popup,
@@ -102,18 +110,7 @@ namespace GetRegulationsIdctvm.pages
                         referenceDate,
                         summary
                     );
-
-
-
-
-                  
-
-
-                    //HttpClient httpClient = new HttpClient();
-
-                    //var response = await httpClient.PostAsync("https://n8n.zitec.ai/webhook/FundoParametros");
-
-
+           
 
                     await popup.WaitForLoadStateAsync();
                     await popup.CloseAsync();

@@ -25,14 +25,19 @@ namespace GetRegulationsIdctvm.runner
 
             var launchOptions = new BrowserTypeLaunchOptions
             {
-                Channel = "chrome",
+                //Channel = "chrome",
                 Headless = false, // Headless no CI, pode ser false local
                                   //Headless = isCi, 
                 Args = new[] { "--no-sandbox", "--disable-dev-shm-usage" }
             };
+            var contextOptions = new BrowserNewContextOptions()
+            {
+                ViewportSize = new ViewportSize() { Width = 1920, Height = 1080 },
+                IgnoreHTTPSErrors = true
+            };
 
             browser = await playwright.Chromium.LaunchAsync(launchOptions);
-            context = await browser.NewContextAsync();
+            context = await browser.NewContextAsync(contextOptions);
             var page = await context.NewPageAsync();
 
             var config = new ConfigurationManager();

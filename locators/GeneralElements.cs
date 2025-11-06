@@ -13,7 +13,7 @@ namespace GetRegulationsIdctvm.locators
         public string Redirect { get; } = "//a[text()='ID CORRETORA DE TITULOS E VALORES MOBILIARIOS S.A.']";
         public string NameFundOnTable(string fundPosition) => $"(//table//tbody//tr[{fundPosition}]//td)[2]//a[@id]";
         public string TypeFundOnTable(string fundPosition) => $"(//table//tbody//tr[{fundPosition}]//td)[3]";
-        public string ReferenceDateOnTable { get; } = $"(//tr//td)[5]";
+        public string ReferenceDateOnTable (string fundName) => $"(//td[normalize-space(text())='{fundName}'][1]/ancestor::tr//td[5])[1]";
         public string ClickHere { get; } = "//a[text()='aqui']";
         public string Table { get; } = "//tbody//tr";
         public string RegulationsField { get; } = "//input[@type='search']";

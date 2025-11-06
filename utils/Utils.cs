@@ -257,15 +257,15 @@ namespace GetRegulationsIdctvm.utils
                 summary.Updated++;
                 summary.FundosAtualizados.Add(nomeBase);
 
-                HttpClient httpClient = new HttpClient();
+                //HttpClient httpClient = new HttpClient();
 
-                byte[] bytes = await File.ReadAllBytesAsync(destinoFinal);
-                using var conteudo = new ByteArrayContent(bytes);
-                conteudo.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+                //byte[] bytes = await File.ReadAllBytesAsync(destinoFinal);
+                //using var conteudo = new ByteArrayContent(bytes);
+                //conteudo.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
 
-                HttpResponseMessage resposta = await httpClient.PostAsync("https://n8n.zitec.ai/webhook/FundoParametros", conteudo);
+                //HttpResponseMessage resposta = await httpClient.PostAsync("https://n8n.zitec.ai/webhook/FundoParametros", conteudo);
 
-                string conteudoResposta = await resposta.Content.ReadAsStringAsync();
+                //string conteudoResposta = await resposta.Content.ReadAsStringAsync();
             }
             catch
             {
