@@ -34,6 +34,17 @@ namespace GetRegulationsIdctvm.utils
                 throw new PlaywrightException($"Don´t possible found Locator : {locator} to Write on step: {step}");
             }
         }
+        public async Task WriteInFrame(IPage page, string locator, string text, string step)
+        {
+            try
+            {
+                await page.FrameLocator("frame[name=\"Main\"]").Locator(locator).FillAsync(text);
+            }
+            catch
+            {
+                throw new PlaywrightException($"Don´t possible found Locator : {locator} to Write on step: {step}");
+            }
+        }
         public async Task Write(string locator, string text, string step)
         {
             try

@@ -1,10 +1,5 @@
-﻿using Microsoft.Playwright;
-using System;
-using Microsoft.Extensions.Configuration;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Playwright;
 
 namespace GetRegulationsIdctvm.runner
 {
@@ -26,8 +21,8 @@ namespace GetRegulationsIdctvm.runner
             var launchOptions = new BrowserTypeLaunchOptions
             {
                 //Channel = "chrome",
-                Headless = false, // Headless no CI, pode ser false local
-                                  //Headless = isCi, 
+                Headless = true, // Headless no CI, pode ser false local
+                                 //Headless = isCi, 
                 Args = new[] { "--no-sandbox", "--disable-dev-shm-usage" }
             };
             var contextOptions = new BrowserNewContextOptions()
