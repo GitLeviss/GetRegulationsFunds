@@ -1,37 +1,32 @@
-﻿using GetRegulationsIdctvm.pages;
+﻿// tests/RegulationsTests.cs
+using GetRegulationsIdctvm.pages;
 using GetRegulationsIdctvm.runner;
-using Microsoft.Playwright;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using GetRegulationsIdctvm.utils;
 
 namespace GetRegulationsIdctvm.tests
 {
     public class RegulationsTests : TestBase
     {
-        private IPage page;
-        [SetUp]
-        public async Task Setup()
-        {
-            page = await OpenBrowserAsync();
-        }
-
-        [TearDown]
-        public async Task Teardown()
-        {
-            await CloseBrowserAsync();
-        }
         [Test]
         public async Task GetRegulationsIdctvm()
         {
-            HomePage homePage = new HomePage(page);
-            await homePage.GetRegulation();
+            var summary = new Utils.DownloadSummary();
+            var firstPage = await OpenBrowserAsync();
+            var home = new HomePage(firstPage);
+            await home.NavigateHomeAsync();
+            var total = await home.GetTotalAsync();
+            await CloseBrowserAsync();
+
+            for (int i = 1; i < total; i++)
+            {
+                var page = await OpenBrowserAsync();
+                var run = new HomePage(page);
+                await run.NavigateHomeAsync();
+                await run.ProcessRowAsync(i, summary);
+                await CloseBrowserAsync();
+            }
+
+            Utils.PrintSummary(summary, total);
         }
-
-
-
-
     }
 }

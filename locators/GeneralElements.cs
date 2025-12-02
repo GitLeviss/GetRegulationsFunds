@@ -18,6 +18,7 @@
         public string FirstName { get; } = "(//tbody//tr)[1]//td[1]";
         public string ButtonDownloadRegulation { get; } = "(//a[@title='Download do Documento'])[1]";
         public string ButtonFindFund { get; } = "//span[text()='Consultar Fundo']"; //Consultar Fundo não Adaptado
+        public string ButtonFindFundNotPerform { get; } = "//span[text()='Consultar Fundo não Adaptado']"; //Consultar Fundo não Adaptado
         public string InputCnpjFund { get; } = "#txtCnpj";
         public string ButtonSearch { get; } = "//span[text()='Pesquisar']";
         public string ButtonDetailsOfFund(string cnpjFund) => $"//tr//td[normalize-space(text()='{cnpjFund}')][3]/ancestor::tr//td[8]//a[1]";

@@ -1,14 +1,6 @@
-﻿using GetRegulationsIdctvm.runner;
-using Microsoft.Playwright;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
+﻿using Microsoft.Playwright;
 using System.Globalization;
-using System.Linq;
 using System.Net.Http.Headers;
-using System.Reflection.Metadata;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GetRegulationsIdctvm.utils
 {
@@ -159,6 +151,7 @@ namespace GetRegulationsIdctvm.utils
             string step,
             string tipoArquivo,      // "FI", "FIDC", "F.I.I.", "FIAGRO", "FIP", "FUNCINE"
             string nomeBase,         // ex: "Regulamento_FIDC_ABC"
+            string cnpjFund,
             string dataReferencia,   // ex: "2025-10-17" (ou "17-10-2025")
             DownloadSummary summary, // acumula totais da execução
             string raiz = @"C:\RegulamentosIDCTVM"
@@ -194,7 +187,7 @@ namespace GetRegulationsIdctvm.utils
 
                 var nomeBaseSafe = Sanitize(nomeBase);
                 var dataRefSafe = Sanitize(dataReferencia);
-                var nomeNovo = $"{dataRefSafe}_{nomeBaseSafe}.pdf";
+                var nomeNovo = $"{dataRefSafe}_{cnpjFund}_{nomeBaseSafe}.pdf";
                 var destinoNovo = Path.Combine(dirAtualizados, nomeNovo);
 
                 // Detectar arquivo existente do mesmo fundo (mesmo nomeBase, data variável)
@@ -268,15 +261,20 @@ namespace GetRegulationsIdctvm.utils
                 summary.Updated++;
                 summary.FundosAtualizados.Add(nomeBase);
 
-                //HttpClient httpClient = new HttpClient();
+                HttpClient httpClient = new HttpClient();
 
-                //byte[] bytes = await File.ReadAllBytesAsync(destinoFinal);
-                //using var conteudo = new ByteArrayContent(bytes);
-                //conteudo.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+                byte[] bytes = await File.ReadAllBytesAsync(destinoFinal);
+                using var conteudo = new ByteArrayContent(bytes);
+                conteudo.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
 
                 //HttpResponseMessage resposta = await httpClient.PostAsync("https://n8n.zitec.ai/webhook/FundoParametros", conteudo);
 
                 //string conteudoResposta = await resposta.Content.ReadAsStringAsync();
+
+                //Console.WriteLine("Resposta N8N:" + conteudoResposta);
+                //Console.WriteLine();
+                //Console.WriteLine("para o fundo" + nomeBaseSafe);
+
             }
             catch
             {
