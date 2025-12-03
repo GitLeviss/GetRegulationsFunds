@@ -151,7 +151,6 @@ namespace GetRegulationsIdctvm.utils
             string step,
             string tipoArquivo,      // "FI", "FIDC", "F.I.I.", "FIAGRO", "FIP", "FUNCINE"
             string nomeBase,         // ex: "Regulamento_FIDC_ABC"
-            string cnpjFund,
             string dataReferencia,   // ex: "2025-10-17" (ou "17-10-2025")
             DownloadSummary summary, // acumula totais da execução
             string raiz = @"C:\RegulamentosIDCTVM"
@@ -187,7 +186,7 @@ namespace GetRegulationsIdctvm.utils
 
                 var nomeBaseSafe = Sanitize(nomeBase);
                 var dataRefSafe = Sanitize(dataReferencia);
-                var nomeNovo = $"{dataRefSafe}_{cnpjFund}_{nomeBaseSafe}.pdf";
+                var nomeNovo = $"{dataRefSafe}_{nomeBaseSafe}.pdf";
                 var destinoNovo = Path.Combine(dirAtualizados, nomeNovo);
 
                 // Detectar arquivo existente do mesmo fundo (mesmo nomeBase, data variável)

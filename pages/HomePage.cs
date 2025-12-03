@@ -90,7 +90,6 @@ namespace GetRegulationsIdctvm.pages
                         $"validate download and length of regulation: {fundName}",
                         typeFund,
                         fundName,
-                        CnpjFund,
                         dateReferente,
                         summary
                     );
@@ -136,7 +135,6 @@ namespace GetRegulationsIdctvm.pages
                     $"validate download and length of regulation: {regulationData}",
                     typeFund,
                     fundName,
-                    CnpjFund,
                     referenceDate,
                     summary
                 );
