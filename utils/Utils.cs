@@ -29,34 +29,12 @@ namespace GetRegulationsIdctvm.utils
                 throw new PlaywrightException($"Don´t possible write on locator: {locator} on step: {step}, Details: {ex.Message}");
             }
         }
-        public async Task WriteInFrame(IPage page, string locator, string text, string step)
-        {
-            try
-            {
-                await page.FrameLocator("frame[name=\"Main\"]").Locator(locator).FillAsync(text);
-            }
-            catch
-            {
-                throw new PlaywrightException($"Don´t possible found Locator : {locator} to Write on step: {step}");
-            }
-        }
-        public async Task Write(string locator, string text, string step)
-        {
-            try
-            {
-                await page.Locator(locator).FillAsync(text);
-            }
-            catch
-            {
-                throw new PlaywrightException($"Don´t possible found Locator : {locator} to Write on step: {step}");
-            }
-        }
         public async Task Write(IPage page, string locator, string text, string step)
         {
             try
             {
                 var element = page.Locator(locator);
-                await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+                await element.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible });
                 await element.FillAsync(text);
             }
             catch
@@ -94,7 +72,9 @@ namespace GetRegulationsIdctvm.utils
         {
             try
             {
-                await page.Locator(locator).ClickAsync();
+                var element = page.Locator(locator);
+                await element.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible });
+                await element.ClickAsync();
             }
             catch
             {
