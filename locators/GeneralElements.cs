@@ -16,7 +16,7 @@
         public string RegulationsField { get; } = "//input[@type='search']";
         public string FirstRegulation { get; } = "(//tbody//tr)[1]//td[2]";
         public string FirstName { get; } = "(//tbody//tr)[1]//td[1]";
-        public string ButtonDownloadRegulation { get; } = "(//a[@title='Download do Documento'])[1]";
+        public string ButtonDownloadRegulation { get; } = "(//b[text()='Regulamento']/ancestor::tr//a[@title='Download do Documento'])[1]";
         public string ButtonFindFund { get; } = "//span[text()='Consultar Fundo']"; //Consultar Fundo não Adaptado
         public string ButtonFindFundNotPerform { get; } = "//span[text()='Consultar Fundo não Adaptado']"; //Consultar Fundo não Adaptado
         public string InputCnpjFund { get; } = "#txtCnpj";
@@ -25,7 +25,7 @@
         public string NavRegulation { get; } = "//ul//div[normalize-space(text())='Regulamento']";
         public string DateReference { get; } = "//td[normalize-space(text())='Ativo']/ancestor::tr//td[2]";
         public string ButtonAction { get; } = "//td[normalize-space(text())='Ativo']/ancestor::tr//td[5]//a";
-        public string ButtonDownloadRegulationOfFund { get; } = "(//b[text()='Regulamento']/ancestor::tr//a[@title='Download do Documento'])[1]";
+        public string ButtonDownloadRegulationOfFund { get; } = "//div[@data-ng-show]//a[@title='Download do Arquivo']";
 
     }
 }

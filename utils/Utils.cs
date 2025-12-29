@@ -1,6 +1,5 @@
 ﻿using Microsoft.Playwright;
 using System.Globalization;
-using System.Net.Http.Headers;
 
 namespace GetRegulationsIdctvm.utils
 {
@@ -248,11 +247,11 @@ namespace GetRegulationsIdctvm.utils
                 summary.Updated++;
                 summary.FundosAtualizados.Add(nomeBase);
 
-                HttpClient httpClient = new HttpClient();
+                //HttpClient httpClient = new HttpClient();
 
-                byte[] bytes = await File.ReadAllBytesAsync(destinoFinal);
-                using var conteudo = new ByteArrayContent(bytes);
-                conteudo.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+                //byte[] bytes = await File.ReadAllBytesAsync(destinoFinal);
+                //using var conteudo = new ByteArrayContent(bytes);
+                //conteudo.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
 
                 //HttpResponseMessage resposta = await httpClient.PostAsync("https://n8n.zitec.ai/webhook/FundoParametros", conteudo);
 
