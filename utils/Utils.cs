@@ -19,11 +19,14 @@ namespace GetRegulationsIdctvm.utils
         {
             try
             {
-                await page.FrameLocator("frame[name=\"Main\"]").Locator(locator).FillAsync(text);
+                var frameHandle = page.FrameLocator("frame[name=\"Main\"]");
+                var element = frameHandle.Locator(locator);
+                await element.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible });
+                await element.FillAsync(text);
             }
-            catch
+            catch (Exception ex)
             {
-                throw new PlaywrightException($"Don´t possible found Locator : {locator} to Write on step: {step}");
+                throw new PlaywrightException($"Don´t possible write on locator: {locator} on step: {step}, Details: {ex.Message}");
             }
         }
         public async Task WriteInFrame(IPage page, string locator, string text, string step)
@@ -52,7 +55,9 @@ namespace GetRegulationsIdctvm.utils
         {
             try
             {
-                await page.Locator(locator).FillAsync(text);
+                var element = page.Locator(locator);
+                await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+                await element.FillAsync(text);
             }
             catch
             {
@@ -63,11 +68,14 @@ namespace GetRegulationsIdctvm.utils
         {
             try
             {
-                await page.FrameLocator("frame[name=\"Main\"]").Locator(locator).ClickAsync();
+                var frameHandle = page.FrameLocator("frame[name=\"Main\"]");
+                var element = frameHandle.Locator(locator);
+                await element.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible });
+                await element.ClickAsync();
             }
-            catch
+            catch (Exception ex)
             {
-                throw new PlaywrightException($"Don´t possible found Locator :{locator} to Click on step: {step}");
+                throw new PlaywrightException($"Don´t possible write on locator: {locator} on step: {step}, Details: {ex.Message}");
             }
         }
 

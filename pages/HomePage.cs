@@ -19,12 +19,12 @@ namespace GetRegulationsIdctvm.pages
 
         public async Task NavigateHomeAsync()
         {
-            await Task.Delay(1000);
+            //await Task.Delay(1000);
             await utils.WriteInFrame(el.InputCnpj, "16.695.922/0001-09", "insert cnpj of IDCTVM on input cnpj at home page");
             await utils.ClickInFrame(el.ButtonContiue, "click on button continue at home page");
-            await Task.Delay(1000);
+            //await Task.Delay(1000);
             await utils.ClickInFrame(el.Redirect, "click on redirect link at home page");
-            await Task.Delay(3000);
+            //await Task.Delay(3000);
         }
 
         public async Task<int> GetTotalAsync()
@@ -45,7 +45,7 @@ namespace GetRegulationsIdctvm.pages
                 await utils.ClickInFrame(el.NameFundOnTable(i.ToString()), $"click on table position {i} at document manager page");
 
                 var popupTask = page.Context.WaitForPageAsync();
-                await Task.Delay(4000);
+                //await Task.Delay(4000);
 
                 if (!await page.FrameLocator("frame[name=\"Main\"]").Locator(el.ClickHere).IsVisibleAsync() &&
                     !await page.FrameLocator("frame[name=\"Main\"]").Locator(el.ButtonClickHere).IsVisibleAsync())
@@ -83,7 +83,7 @@ namespace GetRegulationsIdctvm.pages
                     await utils.Click(popup1, el.NavRegulation, "click on navigation regulation at popup");
                     string dateReferente = (await popup1.Locator(el.DateReference).InnerTextAsync()).Trim();
                     await utils.Click(popup1, el.ButtonAction, "click on action button to open regulation");
-                    await Task.Delay(2000);
+                    //await Task.Delay(2000);
                     await utils.ValidateDownloadAndLength(
                         popup1,
                         el.ButtonDownloadRegulationOfFund,
@@ -102,10 +102,11 @@ namespace GetRegulationsIdctvm.pages
                 }
 
                 var popup = await popupTask;
-                await Task.Delay(3000);
+                //await Task.Delay(3000);
 
                 await utils.Write(popup, el.RegulationsField, "Regulamento", "insert text Regulamento on regulations field at home page");
 
+                //Adicionar trava no Xpath, baixar apenas se for do texto do regulamento
                 var hasRow = await popup.Locator(el.FirstRegulation).IsVisibleAsync();
                 var hasDownloadBtn = await popup.Locator(el.ButtonDownloadRegulation).IsVisibleAsync();
 
@@ -127,7 +128,7 @@ namespace GetRegulationsIdctvm.pages
                 var regulationData = (await popup.Locator(el.FirstRegulation).InnerTextAsync())
                                    + (await popup.Locator(el.FirstName).InnerTextAsync());
 
-                await Task.Delay(3000);
+                //await Task.Delay(3000);
 
                 await utils.ValidateDownloadAndLength(
                     popup,
