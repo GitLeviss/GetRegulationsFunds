@@ -1,5 +1,6 @@
 ﻿using Microsoft.Playwright;
 using System.Globalization;
+using System.Net.Http.Headers;
 
 namespace GetRegulationsIdctvm.utils
 {
@@ -247,19 +248,23 @@ namespace GetRegulationsIdctvm.utils
                 summary.Updated++;
                 summary.FundosAtualizados.Add(nomeBase);
 
-                //HttpClient httpClient = new HttpClient();
+                HttpClient httpClient = new HttpClient();
 
-                //byte[] bytes = await File.ReadAllBytesAsync(destinoFinal);
-                //using var conteudo = new ByteArrayContent(bytes);
-                //conteudo.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+                byte[] bytes = await File.ReadAllBytesAsync(destinoFinal);
+                using var formData = new MultipartFormDataContent();
 
-                //HttpResponseMessage resposta = await httpClient.PostAsync("https://n8n.zitec.ai/webhook/FundoParametros", conteudo);
+                using var fileContent = new ByteArrayContent(bytes);
+                fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
 
-                //string conteudoResposta = await resposta.Content.ReadAsStringAsync();
+                formData.Add(fileContent, "data", Path.GetFileName(destinoFinal));
 
-                //Console.WriteLine("Resposta N8N:" + conteudoResposta);
-                //Console.WriteLine();
-                //Console.WriteLine("para o fundo" + nomeBaseSafe);
+                HttpResponseMessage resposta = await httpClient.PostAsync("https://n8n.zitec.ai/webhook/contrato-fundo", formData);
+
+                string conteudoResposta = await resposta.Content.ReadAsStringAsync();
+
+                Console.WriteLine("Resposta N8N:" + conteudoResposta);
+                Console.WriteLine();
+                Console.WriteLine("para o fundo" + nomeBaseSafe);
 
             }
             catch
