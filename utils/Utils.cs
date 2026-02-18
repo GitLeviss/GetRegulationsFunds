@@ -1,6 +1,6 @@
 ﻿using Microsoft.Playwright;
 using System.Globalization;
-using System.Net.Http.Headers;
+using static Microsoft.Playwright.Assertions;
 
 namespace GetRegulationsIdctvm.utils
 {
@@ -21,8 +21,11 @@ namespace GetRegulationsIdctvm.utils
             {
                 var frameHandle = page.FrameLocator("frame[name=\"Main\"]");
                 var element = frameHandle.Locator(locator);
-                await element.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible });
-                await element.FillAsync(text);
+                await Expect(element).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 90000 });
+                await Expect(element).ToBeEnabledAsync(new LocatorAssertionsToBeEnabledOptions { Timeout = 90000 });
+                await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+                await element.FocusAsync();
+                await element.FillAsync(text, new LocatorFillOptions { Timeout = 90000 });
             }
             catch (Exception ex)
             {
@@ -34,8 +37,11 @@ namespace GetRegulationsIdctvm.utils
             try
             {
                 var element = page.Locator(locator);
-                await element.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible });
-                await element.FillAsync(text);
+                await Expect(element).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 90000 });
+                await Expect(element).ToBeEnabledAsync(new LocatorAssertionsToBeEnabledOptions { Timeout = 90000 });
+                await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+                await element.FocusAsync();
+                await element.FillAsync(text, new LocatorFillOptions { Timeout = 90000 });
             }
             catch
             {
@@ -48,8 +54,11 @@ namespace GetRegulationsIdctvm.utils
             {
                 var frameHandle = page.FrameLocator("frame[name=\"Main\"]");
                 var element = frameHandle.Locator(locator);
-                await element.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible });
-                await element.ClickAsync();
+                await Expect(element).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 90000 });
+                await Expect(element).ToBeEnabledAsync(new LocatorAssertionsToBeEnabledOptions { Timeout = 90000 });
+                await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+                await element.FocusAsync();
+                await element.ClickAsync(new LocatorClickOptions { Timeout = 90000 }); ;
             }
             catch (Exception ex)
             {
@@ -61,7 +70,16 @@ namespace GetRegulationsIdctvm.utils
         {
             try
             {
-                await page.Locator(locator).ClickAsync();
+                var element = page.Locator(locator);
+
+                await Expect(element).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 90000 });
+                await Expect(element).ToBeEnabledAsync(new LocatorAssertionsToBeEnabledOptions { Timeout = 90000 });
+                await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+                await element.ClickAsync(new LocatorClickOptions
+                {
+                    Timeout = 60000
+                });
             }
             catch
             {
@@ -73,8 +91,15 @@ namespace GetRegulationsIdctvm.utils
             try
             {
                 var element = page.Locator(locator);
-                await element.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible });
-                await element.ClickAsync();
+
+                await Expect(element).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 90000 });
+                await Expect(element).ToBeEnabledAsync(new LocatorAssertionsToBeEnabledOptions { Timeout = 90000 });
+                await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+
+                await element.ClickAsync(new LocatorClickOptions
+                {
+                    Timeout = 60000
+                });
             }
             catch
             {
@@ -139,6 +164,7 @@ namespace GetRegulationsIdctvm.utils
             string step,
             string tipoArquivo,      // "FI", "FIDC", "F.I.I.", "FIAGRO", "FIP", "FUNCINE"
             string nomeBase,         // ex: "Regulamento_FIDC_ABC"
+            string cnpjFund,
             string dataReferencia,   // ex: "2025-10-17" (ou "17-10-2025")
             DownloadSummary summary, // acumula totais da execução
             string raiz = @"C:\RegulamentosIDCTVM"
@@ -174,7 +200,11 @@ namespace GetRegulationsIdctvm.utils
 
                 var nomeBaseSafe = Sanitize(nomeBase);
                 var dataRefSafe = Sanitize(dataReferencia);
-                var nomeNovo = $"{dataRefSafe}_{nomeBaseSafe}.pdf";
+                var cnpjFundo = Sanitize(cnpjFund);
+                cnpjFundo = cnpjFundo.Replace(".", "")
+                    .Replace("/", "")
+                    .Replace("-", "");
+                var nomeNovo = $"{dataRefSafe}_{cnpjFundo}.pdf";
                 var destinoNovo = Path.Combine(dirAtualizados, nomeNovo);
 
                 // Detectar arquivo existente do mesmo fundo (mesmo nomeBase, data variável)
@@ -248,23 +278,23 @@ namespace GetRegulationsIdctvm.utils
                 summary.Updated++;
                 summary.FundosAtualizados.Add(nomeBase);
 
-                HttpClient httpClient = new HttpClient();
+                //HttpClient httpClient = new HttpClient();
 
-                byte[] bytes = await File.ReadAllBytesAsync(destinoFinal);
-                using var formData = new MultipartFormDataContent();
+                //byte[] bytes = await File.ReadAllBytesAsync(destinoFinal);
+                //using var formData = new MultipartFormDataContent();
 
-                using var fileContent = new ByteArrayContent(bytes);
-                fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+                //using var fileContent = new ByteArrayContent(bytes);
+                //fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
 
-                formData.Add(fileContent, "data", Path.GetFileName(destinoFinal));
+                //formData.Add(fileContent, "data", Path.GetFileName(destinoFinal));
 
-                HttpResponseMessage resposta = await httpClient.PostAsync("https://n8n.zitec.ai/webhook/contrato-fundo", formData);
+                //HttpResponseMessage resposta = await httpClient.PostAsync("https://n8n.zitec.ai/webhook/contrato-fundo", formData);
 
-                string conteudoResposta = await resposta.Content.ReadAsStringAsync();
+                //string conteudoResposta = await resposta.Content.ReadAsStringAsync();
 
-                Console.WriteLine("Resposta N8N:" + conteudoResposta);
-                Console.WriteLine();
-                Console.WriteLine("para o fundo" + nomeBaseSafe);
+                //Console.WriteLine("Resposta N8N:" + conteudoResposta);
+                //Console.WriteLine();
+                //Console.WriteLine("para o fundo" + nomeBaseSafe);
 
             }
             catch

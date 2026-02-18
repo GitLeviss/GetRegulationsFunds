@@ -19,12 +19,12 @@ namespace GetRegulationsIdctvm.pages
 
         public async Task NavigateHomeAsync()
         {
-            await Task.Delay(1000);
+            //await Task.Delay(1000);
             await utils.WriteInFrame(el.InputCnpj, "16.695.922/0001-09", "insert cnpj of IDCTVM on input cnpj at home page");
             await utils.ClickInFrame(el.ButtonContiue, "click on button continue at home page");
-            await Task.Delay(1000);
+            //await Task.Delay(1000);
             await utils.ClickInFrame(el.Redirect, "click on redirect link at home page");
-            await Task.Delay(3000);
+            //await Task.Delay(3000);
         }
 
         public async Task<int> GetTotalAsync()
@@ -45,7 +45,7 @@ namespace GetRegulationsIdctvm.pages
                 await utils.ClickInFrame(el.NameFundOnTable(i.ToString()), $"click on table position {i} at document manager page");
 
                 var popupTask = page.Context.WaitForPageAsync();
-                await Task.Delay(4000);
+                //await Task.Delay(4000);
 
                 if (!await page.FrameLocator("frame[name=\"Main\"]").Locator(el.ClickHere).IsVisibleAsync() &&
                     !await page.FrameLocator("frame[name=\"Main\"]").Locator(el.ButtonClickHere).IsVisibleAsync())
@@ -64,32 +64,33 @@ namespace GetRegulationsIdctvm.pages
                     await utils.ClickInFrame(el.ButtonClickHere, "click on button click here at home page");
                     var popup1 = await popupTask;
                     await utils.Click(popup1, el.ButtonFindFund, "click on button to find fund");
-                    await Task.Delay(2500);
+                    //await Task.Delay(2500);
                     await utils.Click(popup1, el.InputCnpjFund, "click on input cnpj at popup to activate the input");
                     await utils.Write(popup1, el.InputCnpjFund, CnpjFund, "insert cnpj of fund on input cnpj at popup");
                     await utils.Click(popup1, el.ButtonSearch, "click on button search fund at popup");
-                    await Task.Delay(2000);
+                    //await Task.Delay(2000);
                     if (!await popup1.Locator(el.ButtonDetailsOfFund(CnpjFund)).IsVisibleAsync())
                     {
                         await popup1.GoBackAsync();
                         await utils.Click(popup1, el.ButtonFindFundNotPerform, "click on button to find fund");
-                        await Task.Delay(2500);
+                        //await Task.Delay(2500);
                         await utils.Click(popup1, el.InputCnpjFund, "click on input cnpj at popup to activate the input");
                         await utils.Write(popup1, el.InputCnpjFund, CnpjFund, "insert cnpj of fund on input cnpj at popup");
                         await utils.Click(popup1, el.ButtonSearch, "click on button search fund at popup");
-                        await Task.Delay(3000);
+                        //await Task.Delay(3000);
                     }
                     await utils.Click(popup1, el.ButtonDetailsOfFund(CnpjFund), "click on button details of fund at popup");
                     await utils.Click(popup1, el.NavRegulation, "click on navigation regulation at popup");
                     string dateReferente = (await popup1.Locator(el.DateReference).InnerTextAsync()).Trim();
                     await utils.Click(popup1, el.ButtonAction, "click on action button to open regulation");
-                    await Task.Delay(2000);
+                    //await Task.Delay(2000);
                     await utils.ValidateDownloadAndLength(
                         popup1,
                         el.ButtonDownloadRegulationOfFund,
                         $"validate download and length of regulation: {fundName}",
                         typeFund,
                         fundName,
+                        CnpjFund,
                         dateReferente,
                         summary
                     );
@@ -136,6 +137,7 @@ namespace GetRegulationsIdctvm.pages
                     $"validate download and length of regulation: {regulationData}",
                     typeFund,
                     fundName,
+                    CnpjFund,
                     referenceDate,
                     summary
                 );
