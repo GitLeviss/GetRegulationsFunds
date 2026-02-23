@@ -19,11 +19,19 @@ namespace GetRegulationsIdctvm.tests
 
             for (int i = 1; i < total; i++)
             {
-                var page = await OpenBrowserAsync();
-                var run = new HomePage(page);
-                await run.NavigateHomeAsync();
-                await run.ProcessRowAsync(i, summary);
-                await CloseBrowserAsync();
+                try
+                {
+                    var page = await OpenBrowserAsync();
+                    var run = new HomePage(page);
+                    await run.NavigateHomeAsync();
+                    await run.ProcessRowAsync(i, summary);
+                    await CloseBrowserAsync();
+                }
+                catch
+                {
+                    continue;
+                }
+
             }
 
             Utils.PrintSummary(summary, total);

@@ -271,9 +271,9 @@ namespace GetRegulationsIdctvm.utils
                 var destinoFinal = GetUniquePath(destinoNovo); // evita colisão acidental
                 await download.SaveAsAsync(destinoFinal);
 
-                Assert.That(File.Exists(destinoFinal), $"❌ File '{destinoFinal}' didn't save.");
+                Assert.That(File.Exists(destinoFinal), $"File '{destinoFinal}' did save.");
                 var info = new FileInfo(destinoFinal);
-                Assert.That(info.Length, Is.GreaterThan(0), $"❌ File '{destinoFinal}' is empty (0 bytes).");
+                Assert.That(info.Length, Is.GreaterThan(0), $"File '{destinoFinal}' is not empty (0 bytes).");
 
                 summary.Updated++;
                 summary.FundosAtualizados.Add(nomeBase);
