@@ -106,6 +106,12 @@ namespace GetRegulationsIdctvm.pages
                 var popup = await popupTask;
                 //await Task.Delay(3000);
 
+                bool regulationsField = await page.Locator(el.RegulationsField).IsVisibleAsync();
+
+                if (regulationsField != true)
+                {
+                    await page.ReloadAsync();
+                }
                 await utils.Write(popup, el.RegulationsField, "Regulamento", "insert text Regulamento on regulations field at home page");
 
                 //Adicionar trava no Xpath, baixar apenas se for do texto do regulamento

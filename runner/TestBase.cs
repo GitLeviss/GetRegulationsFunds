@@ -15,7 +15,7 @@ namespace GetRegulationsIdctvm.runner
             playwright = await Playwright.CreateAsync();
             var launchOptions = new BrowserTypeLaunchOptions
             {
-                Headless = false,
+                Headless = true,
                 Args = new[] { "--no-sandbox", "--disable-dev-shm-usage" }
             };
             var contextOptions = new BrowserNewContextOptions()
@@ -31,7 +31,7 @@ namespace GetRegulationsIdctvm.runner
 
             var config = new ConfigurationManager();
             config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-            var linkCtvm = config["Links:Ctvm"];
+            var linkCtvm = config["Links:Ctvm"] ?? Environment.GetEnvironmentVariable("LINK_CTVM");
             await page.GotoAsync(linkCtvm);
             return page;
         }
