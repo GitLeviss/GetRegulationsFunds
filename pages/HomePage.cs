@@ -122,52 +122,57 @@ namespace GetRegulationsIdctvm.pages
                 }
 
                 var popup = await popupTask;
-                //await Task.Delay(3000);
 
-                bool regulationsField = await page.Locator(el.RegulationsField).IsVisibleAsync();
+                bool anyDownloaded = false;
 
-                if (regulationsField != true)
-                {
-                    await page.ReloadAsync();
-                }
-                await utils.Write(popup, el.RegulationsField, "Regulamento", "insert text Regulamento on regulations field at home page");
-                await Task.Delay(2000);
-                //Adicionar trava no Xpath, baixar apenas se for do texto do regulamento
-                var hasRow = await popup.Locator(el.FirstRegulation).IsVisibleAsync();
-                var hasDownloadBtn = await popup.Locator(el.ButtonDownloadRegulation).IsVisibleAsync();
-
-                if (!hasRow || !hasDownloadBtn)
-                {
-                    summary.Missing++;
-                    summary.FundosSemRegulamento.Add(fundName);
-                    await popup.CloseAsync();
-                    return;
-                }
-
-                string referenceDate = await popup.Locator(el.ReferenceDateOnTable(fundName)).InnerTextAsync();
-                if (referenceDate is null)
-                {
-                    await popup.CloseAsync();
-                    return;
-                }
-
-                var regulationData = (await popup.Locator(el.FirstRegulation).InnerTextAsync())
-                                   + (await popup.Locator(el.FirstName).InnerTextAsync());
-
-                //await Task.Delay(3000);
-
-                await utils.ValidateDownloadAndLength(
+                anyDownloaded |= await utils.ProcessDocumentInPopupAsync(
                     popup,
-                    el.ButtonDownloadRegulation,
-                    $"validate download and length of regulation: {regulationData}",
-                    typeFund,
                     fundName,
+                    typeFund,
                     CnpjFund,
-                    referenceDate,
+                    el.RegulationsField,
+                    "Regulamento",
+                    el.FirstRegulation,
+                    el.ButtonDownloadRegulation,
+                    el.ReferenceDateOnTable(fundName),
+                    "01. REGULAMENTO",
                     summary
                 );
 
-                await popup.WaitForLoadStateAsync();
+                anyDownloaded |= await utils.ProcessDocumentInPopupAsync(
+                    popup,
+                    fundName,
+                    typeFund,
+                    CnpjFund,
+                    el.RegulationsField,                 // campo de filtro para assembleia
+                    "Assembleia",                        // texto a ser digitado
+                    el.FirstAssembly,                    // primeira linha da tabela de assembleias
+                    el.ButtonDownloadAssembly,           // botão de download de assembleia
+                    el.ReferenceDateOnTable(fundName),   // locator de data de referência da assembleia
+                    "02. ASSEMBLÉIAS",
+                    summary
+                );
+
+                anyDownloaded |= await utils.ProcessDocumentInPopupAsync(
+                    popup,
+                    fundName,
+                    typeFund,
+                    CnpjFund,
+                    el.RegulationsField,
+                    "Informe",
+                    el.FirstPeriodicInfo,
+                    el.ButtonDownloadInfoPeriodic,
+                    el.ReferenceDateOnTable(fundName),
+                    "03. INFORMES PERIÓDICOS",
+                    summary
+                );
+
+                if (!anyDownloaded)
+                {
+                    summary.Missing++;
+                    summary.FundosSemRegulamento.Add(fundName);
+                }
+
                 await popup.CloseAsync();
             }
             catch (Exception ex)

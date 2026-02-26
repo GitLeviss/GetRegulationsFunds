@@ -179,18 +179,128 @@ namespace GetRegulationsIdctvm.utils
             Console.WriteLine("----------------------------------\n");
         }
 
+        public async Task<bool> ProcessDocumentInPopupAsync(
+            IPage popup,
+            string fundName,
+            string typeFund,
+            string cnpjFund,
+            string typeFieldLocator,        // ex.: campo de filtro ("Regulamento", "Assembleia", "Informe")
+            string typeFieldValue,          // texto a ser digitado no campo (ex.: "Regulamento")
+            string firstRowLocator,         // primeiro registro da tabela
+            string downloadButtonLocator,   // botão de download na tabela
+            string referenceDateLocator,    // locator da data de referência
+            string pastaDocumento,          // "01. REGULAMENTO", "02. ASSEMBLÉIAS", "03. INFORMES PERIÓDICOS"
+            DownloadSummary summary
+        )
+        {
+            try
+            {
+                // Garante que o campo de filtro está visível
+                var filter = popup.Locator(typeFieldLocator);
+                if (!await filter.IsVisibleAsync())
+                {
+                    await popup.ReloadAsync();
+                    filter = popup.Locator(typeFieldLocator);
+                }
+
+                // Limpa o campo de pesquisa antes de digitar o novo tipo
+                try
+                {
+                    await filter.FillAsync(string.Empty);
+                }
+                catch
+                {
+                    // Se não conseguir limpar, segue e sobrescreve com Write
+                }
+
+                await Write(popup, typeFieldLocator, typeFieldValue, $"insert text {typeFieldValue} on filter field");
+                await Task.Delay(2000);
+
+                var rowLocator = popup.Locator(firstRowLocator);
+                var downloadLocator = popup.Locator(downloadButtonLocator);
+
+                bool hasRow = false;
+                bool hasDownloadBtn = false;
+
+                try
+                {
+                    await rowLocator.WaitForAsync(new LocatorWaitForOptions
+                    {
+                        State = WaitForSelectorState.Visible,
+                        Timeout = 5000
+                    });
+                    hasRow = true;
+                }
+                catch
+                {
+                    hasRow = false;
+                }
+
+                try
+                {
+                    await downloadLocator.WaitForAsync(new LocatorWaitForOptions
+                    {
+                        State = WaitForSelectorState.Visible,
+                        Timeout = 5000
+                    });
+                    hasDownloadBtn = true;
+                }
+                catch
+                {
+                    hasDownloadBtn = false;
+                }
+
+                if (!hasRow || !hasDownloadBtn)
+                {
+                    // Não fecha o popup e deixa o caller decidir o que fazer
+                    return false;
+                }
+
+                string referenceDate = await popup.Locator(referenceDateLocator).InnerTextAsync();
+                if (string.IsNullOrWhiteSpace(referenceDate))
+                {
+                    return false;
+                }
+
+                var documentData = (await popup.Locator(firstRowLocator).InnerTextAsync())
+                                   + (await popup.Locator(_el.FirstName).InnerTextAsync());
+
+                await ValidateDownloadAndLength(
+                    popup,
+                    downloadButtonLocator,
+                    $"validate download and length of document: {documentData}",
+                    typeFund,
+                    fundName,
+                    cnpjFund,
+                    referenceDate,
+                    summary,
+                    pastaDocumento
+                );
+
+                await popup.WaitForLoadStateAsync();
+                await popup.ReloadAsync();
+
+                return true;
+            }
+            catch
+            {
+                // Deixa a exceção subir para ser contabilizada em ProcessRowAsync
+                throw;
+            }
+        }
+
         public async Task ValidateDownloadAndLength(
             IPage page,
             string locatorClickDownload,
             string step,
-            string tipoArquivo,      // "FI", "FIDC", "F.I.I.", "FIAGRO", "FIP", "FUNCINE"
-            string nomeBase,         // ex: "Regulamento_FIDC_ABC" (nome do fundo)
+            string tipoArquivo,       // "FI", "FIDC", "F.I.I.", "FIAGRO", "FIP", "FUNCINE"
+            string nomeBase,          // ex: "Regulamento_FIDC_ABC" (nome do fundo)
             string cnpjFund,
-            string dataReferencia,   // ex: "2025-10-17" (ou "17-10-2025")
-            DownloadSummary summary, // acumula totais da execução
-                                     //string raiz = @"C:\Users\LeviAlves\ID CTVM Dropbox\PUBLICO\SITE - POLÍTICAS PUBLICADAS\01. FUNDOS"
-            string raiz = @"C:\RegulamentosIDCTVM"
-
+            string dataReferencia,    // ex: "2025-10-17" (ou "17-10-2025")
+            DownloadSummary summary,  // acumula totais da execução
+            string pastaDocumento = "01. REGULAMENTO", // "01. REGULAMENTO" | "02. ASSEMBLÉIAS" | "03. INFORMES PERIÓDICOS"
+            string raiz = @"C:\Users\LeviAlves\ID CTVM Dropbox\PUBLICO\SITE - POLÍTICAS PUBLICADAS\01. FUNDOS"
+        //string raiz = @"C:\RegulamentosIDCTVM"
         )
         {
             string Sanitize(string s)
@@ -240,18 +350,18 @@ namespace GetRegulationsIdctvm.utils
                 var nomeFundoSafe = Sanitize(nomeBase);
                 var dataRefFormatada = dataNova.Value.ToString("yyyy-MM-dd");
 
-                // Estrutura: raiz (Dropbox) / Nome do Fundo / 01. REGULAMENTO / dataReferencia_TipoFundo.pdf
+                // Estrutura: raiz / Nome do Fundo / <pastaDocumento> / dataReferencia_TipoFundo.pdf
                 var dirFundo = Path.Combine(raiz.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar), nomeFundoSafe);
-                var dirRegulamento = Path.Combine(dirFundo, "01. REGULAMENTO");
+                var dirDocumento = Path.Combine(dirFundo, pastaDocumento);
 
-                Directory.CreateDirectory(dirRegulamento);
+                Directory.CreateDirectory(dirDocumento);
 
                 var nomeArquivo = $"{dataRefFormatada}_{tipoParaArquivo}.pdf";
-                var destinoNovo = Path.Combine(dirRegulamento, nomeArquivo);
+                var destinoNovo = Path.Combine(dirDocumento, nomeArquivo);
 
                 // Verificar se já existe arquivo do mesmo tipo com mesma data ou mais recente
                 var pattern = $"*_{tipoParaArquivo}.pdf";
-                var existentes = Directory.EnumerateFiles(dirRegulamento, pattern, SearchOption.TopDirectoryOnly).ToList();
+                var existentes = Directory.EnumerateFiles(dirDocumento, pattern, SearchOption.TopDirectoryOnly).ToList();
                 DateTime? dataExistente = null;
 
                 foreach (var arq in existentes)
@@ -321,41 +431,7 @@ namespace GetRegulationsIdctvm.utils
             }
         }
 
-        public async Task RelevantFactFlow()
-        {
-            if (!await page.FrameLocator("frame[name=\"Main\"]").Locator(_el.ButtonRelevantFact).IsVisibleAsync())
-            {
-                return;
-            }
 
-            await ClickInFrame(_el.ButtonRelevantFact, "Click on Relevant Fact to redirect to list of able documents to download");
-            await Task.Delay(2500);
-            string referenceDate = await page.FrameLocator("frame[name=\"Main\"]").Locator(_el.ReferenceDateFact).InnerTextAsync();
-            referenceDate = referenceDate.Trim()
-                .Replace("/", "");
-            await ClickInFrame(_el.ButtonToRedirectDownloaderFact, "Click on link to redirect to page with button to download relevant fact");
-            await Task.Delay(1000);
-            for (var i = 0; i < 2; i++)
-            {
-                try
-                {
-                    var frame = page.FrameLocator("iframe");
-                    var saveButton = frame
-                        .Locator("pdf-viewer")
-                        .Locator("viewer-download-controls")
-                        .Locator("#save");
-
-
-                    await saveButton.ClickAsync();
-                    //await Click(_el.ButtonDownloadFact, "Click on button to download relevant fact");
-                }
-                catch
-                {
-                    continue;
-                }
-            }
-
-        }
 
     }
 }

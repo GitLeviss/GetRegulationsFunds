@@ -15,9 +15,13 @@
         public string Table { get; } = "//tbody//tr";
         public string NameFundsInTable { get; } = "//tbody//tr//td[2]";
         public string RegulationsField { get; } = "//input[@type='search']";
-        public string FirstRegulation { get; } = "(//tbody//tr)[1]//td[2]";
+        public string FirstRegulation { get; } = "(//tbody//tr)[1]//b[normalize-space(text())='Regulamento']";
+        public string FirstPeriodicInfo { get; } = "(//tbody//tr)[1]//b[normalize-space(text())='Informes Periódicos']";
+        public string FirstAssembly { get; } = "(//tbody//tr)[1]//b[normalize-space(text())='Assembleia']";
         public string FirstName { get; } = "(//tbody//tr)[1]//td[1]";
         public string ButtonDownloadRegulation { get; } = "(//b[text()='Regulamento']/ancestor::tr//a[@title='Download do Documento'])[1]";
+        public string ButtonDownloadInfoPeriodic { get; } = "(//b[text()='Informes Periódicos']/ancestor::tr//a[@title='Download do Documento'])[1]";
+        public string ButtonDownloadAssembly { get; } = "(//b[text()='Assembleia']/ancestor::tr//a[@title='Download do Documento'])[1]";
         public string ButtonFindFund { get; } = "//span[text()='Consultar Fundo']"; //Consultar Fundo não Adaptado
         public string ButtonFindFundNotPerform { get; } = "//span[text()='Consultar Fundo não Adaptado']"; //Consultar Fundo não Adaptado
         public string InputCnpjFund { get; } = "#txtCnpj";
