@@ -1,4 +1,4 @@
-﻿// pages/HomePage.cs
+// pages/HomePage.cs
 using GetRegulationsIdctvm.locators;
 using GetRegulationsIdctvm.utils;
 using Microsoft.Playwright;
@@ -131,7 +131,7 @@ namespace GetRegulationsIdctvm.pages
                     await page.ReloadAsync();
                 }
                 await utils.Write(popup, el.RegulationsField, "Regulamento", "insert text Regulamento on regulations field at home page");
-
+                await Task.Delay(2000);
                 //Adicionar trava no Xpath, baixar apenas se for do texto do regulamento
                 var hasRow = await popup.Locator(el.FirstRegulation).IsVisibleAsync();
                 var hasDownloadBtn = await popup.Locator(el.ButtonDownloadRegulation).IsVisibleAsync();
