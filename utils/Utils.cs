@@ -1,4 +1,5 @@
-﻿using Microsoft.Playwright;
+using GetRegulationsIdctvm.locators;
+using Microsoft.Playwright;
 using System.Globalization;
 using System.Net.Http.Headers;
 using static Microsoft.Playwright.Assertions;
@@ -10,6 +11,8 @@ namespace GetRegulationsIdctvm.utils
     public class Utils
     {
         private readonly IPage page;
+
+        GeneralElements _el = new GeneralElements();
 
         public Utils(IPage page)
         {
@@ -60,6 +63,23 @@ namespace GetRegulationsIdctvm.utils
                 await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
                 await element.FocusAsync();
                 await element.ClickAsync(new LocatorClickOptions { Timeout = 90000 }); ;
+            }
+            catch (Exception ex)
+            {
+                throw new PlaywrightException($"Don´t possible write on locator: {locator} on step: {step}, Details: {ex.Message}");
+            }
+        }
+        public async Task DblClickInFrame(string locator, string step)
+        {
+            try
+            {
+                var frameHandle = page.FrameLocator("frame[name=\"Main\"]");
+                var element = frameHandle.Locator(locator);
+                await Expect(element).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 90000 });
+                await Expect(element).ToBeEnabledAsync(new LocatorAssertionsToBeEnabledOptions { Timeout = 90000 });
+                await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+                await element.FocusAsync();
+                await element.DblClickAsync(new LocatorDblClickOptions { Timeout = 2000 }); ;
             }
             catch (Exception ex)
             {
@@ -164,77 +184,89 @@ namespace GetRegulationsIdctvm.utils
             string locatorClickDownload,
             string step,
             string tipoArquivo,      // "FI", "FIDC", "F.I.I.", "FIAGRO", "FIP", "FUNCINE"
-            string nomeBase,         // ex: "Regulamento_FIDC_ABC"
+            string nomeBase,         // ex: "Regulamento_FIDC_ABC" (nome do fundo)
             string cnpjFund,
             string dataReferencia,   // ex: "2025-10-17" (ou "17-10-2025")
             DownloadSummary summary, // acumula totais da execução
+                                     //string raiz = @"C:\Users\LeviAlves\ID CTVM Dropbox\PUBLICO\SITE - POLÍTICAS PUBLICADAS\01. FUNDOS"
             string raiz = @"C:\RegulamentosIDCTVM"
+
         )
         {
+            string Sanitize(string s)
+            {
+                var invalid = Path.GetInvalidFileNameChars();
+                return new string(s.Where(c => !invalid.Contains(c)).ToArray()).Trim();
+            }
+
+            static DateTime? TryParseDateFlexible(string s)
+            {
+                var formats = new[]
+                {
+                    "yyyy-MM-dd", "dd-MM-yyyy", "dd/MM/yyyy", "yyyyMMdd", "ddMMyyyy", "dd_MM_yyyy", "yyyy_MM_dd"
+                };
+                if (DateTime.TryParseExact(s, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt))
+                    return dt;
+                if (DateTime.TryParse(s, out dt)) return dt;
+                return null;
+            }
+
+            static string GetUniquePath(string path)
+            {
+                if (!File.Exists(path)) return path;
+                var dir = Path.GetDirectoryName(path)!;
+                var name = Path.GetFileNameWithoutExtension(path);
+                var ext = Path.GetExtension(path);
+                int i = 1;
+                string candidate;
+                do { candidate = Path.Combine(dir, $"{name} ({i++}){ext}"); }
+                while (File.Exists(candidate));
+                return candidate;
+            }
+
             try
             {
                 var tipos = new[] { "FI", "FIDC", "F.I.I.", "FIAGRO", "FIP", "FUNCINE" };
                 if (!tipos.Contains(tipoArquivo))
                     throw new ArgumentException($"Tipo inválido: {tipoArquivo}");
 
-                // O nome "F.I.I." é inválido para pastas no Windows. Precisamos de um nome válido.
-                string nomePasta = tipoArquivo;
-                if (tipoArquivo == "F.I.I.")
-                {
-                    nomePasta = "F.I.I"; // Usa um nome de pasta válido, sem o ponto final.
-                }
+                // Nome do tipo para uso em arquivo (F.I.I. → FII para evitar problemas no nome do arquivo)
+                string tipoParaArquivo = tipoArquivo == "F.I.I." ? "FII" : tipoArquivo;
 
-                // Pastas
-                var baseFundos = Path.Combine(raiz, "Fundos");
-                var dirAtualizados = Path.Combine(baseFundos, "RegulamentosAtualizados", nomePasta);
-                var dirAntigos = Path.Combine(baseFundos, "RegulamentosAntigos", nomePasta);
-
-                Directory.CreateDirectory(dirAtualizados);
-                Directory.CreateDirectory(dirAntigos);
-
-                // Sanitização e caminhos
-                string Sanitize(string s)
-                {
-                    var invalid = Path.GetInvalidFileNameChars();
-                    return new string(s.Where(c => !invalid.Contains(c)).ToArray()).Trim();
-                }
-
-                var nomeBaseSafe = Sanitize(nomeBase);
-                var dataRefSafe = Sanitize(dataReferencia);
-                var cnpjFundo = Sanitize(cnpjFund);
-                cnpjFundo = cnpjFundo.Replace(".", "")
-                    .Replace("/", "")
-                    .Replace("-", "");
-                var nomeNovo = $"{dataRefSafe}_{cnpjFundo}.pdf";
-                var destinoNovo = Path.Combine(dirAtualizados, nomeNovo);
-
-                // Detectar arquivo existente do mesmo fundo (mesmo nomeBase, data variável)
-                var pattern = $"{nomeBaseSafe}_*.pdf";
-                var existentes = Directory.EnumerateFiles(dirAtualizados, pattern, SearchOption.TopDirectoryOnly).ToList();
-
-                // Extrair maior data existente
-                DateTime? dataExistente = null;
-                string? caminhoExistenteMaisRecente = null;
-
-                foreach (var arq in existentes)
-                {
-                    var dt = TryParseDateFromFileName(arq, nomeBaseSafe);
-                    if (dt != null && (dataExistente == null || dt > dataExistente))
-                    {
-                        dataExistente = dt;
-                        caminhoExistenteMaisRecente = arq;
-                    }
-                }
-
-                // Converter data de referência informada
                 var dataNova = TryParseDateFlexible(dataReferencia);
                 if (dataNova == null)
                     throw new ArgumentException($"Data de referência inválida: {dataReferencia}");
 
-                // Regras:
-                // - Igual: não baixa (Skipped++)
-                // - Nova < existente: não baixa (Skipped++)
-                // - Nova > existente: move existente -> Antigos e baixa novo (Updated++)
+                var nomeFundoSafe = Sanitize(nomeBase);
+                var dataRefFormatada = dataNova.Value.ToString("yyyy-MM-dd");
+
+                // Estrutura: raiz (Dropbox) / Nome do Fundo / 01. REGULAMENTO / dataReferencia_TipoFundo.pdf
+                var dirFundo = Path.Combine(raiz.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar), nomeFundoSafe);
+                var dirRegulamento = Path.Combine(dirFundo, "01. REGULAMENTO");
+
+                Directory.CreateDirectory(dirRegulamento);
+
+                var nomeArquivo = $"{dataRefFormatada}_{tipoParaArquivo}.pdf";
+                var destinoNovo = Path.Combine(dirRegulamento, nomeArquivo);
+
+                // Verificar se já existe arquivo do mesmo tipo com mesma data ou mais recente
+                var pattern = $"*_{tipoParaArquivo}.pdf";
+                var existentes = Directory.EnumerateFiles(dirRegulamento, pattern, SearchOption.TopDirectoryOnly).ToList();
+                DateTime? dataExistente = null;
+
+                foreach (var arq in existentes)
+                {
+                    var nomeArq = Path.GetFileNameWithoutExtension(arq);
+                    var idx = nomeArq.IndexOf('_');
+                    if (idx >= 0)
+                    {
+                        var datePart = nomeArq[..idx];
+                        var dt = TryParseDateFlexible(datePart);
+                        if (dt != null && (dataExistente == null || dt > dataExistente))
+                            dataExistente = dt;
+                    }
+                }
+
                 if (dataExistente != null)
                 {
                     if (dataNova == dataExistente)
@@ -251,14 +283,7 @@ namespace GetRegulationsIdctvm.utils
                     }
                 }
 
-                // Se há arquivo anterior e a nova data é mais recente, arquivar o anterior
-                if (caminhoExistenteMaisRecente != null && File.Exists(caminhoExistenteMaisRecente))
-                {
-                    var destinoArquivoAntigo = GetUniquePath(Path.Combine(dirAntigos, Path.GetFileName(caminhoExistenteMaisRecente)));
-                    File.Move(caminhoExistenteMaisRecente, destinoArquivoAntigo);
-                }
-
-                // Baixar e salvar novo
+                // Baixar e salvar em: raiz / Nome do Fundo / 01. REGULAMENTO / dataReferencia_TipoFundo.pdf
                 var download = await page.RunAndWaitForDownloadAsync(async () =>
                 {
                     var element = page.Locator(locatorClickDownload);
@@ -266,10 +291,7 @@ namespace GetRegulationsIdctvm.utils
                     await element.ClickAsync();
                 });
 
-
-
-
-                var destinoFinal = GetUniquePath(destinoNovo); // evita colisão acidental
+                var destinoFinal = GetUniquePath(destinoNovo);
                 await download.SaveAsAsync(destinoFinal);
 
                 Assert.That(File.Exists(destinoFinal), $"File '{destinoFinal}' did save.");
@@ -279,70 +301,62 @@ namespace GetRegulationsIdctvm.utils
                 summary.Updated++;
                 summary.FundosAtualizados.Add(nomeBase);
 
-                HttpClient httpClient = new HttpClient();
-
+                // Envio para N8N
+                using var httpClient = new HttpClient();
                 byte[] bytes = await File.ReadAllBytesAsync(destinoFinal);
                 using var formData = new MultipartFormDataContent();
-
                 using var fileContent = new ByteArrayContent(bytes);
                 fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
-
                 formData.Add(fileContent, "data", Path.GetFileName(destinoFinal));
 
-                HttpResponseMessage resposta = await httpClient.PostAsync("https://n8n.zitec.ai/webhook/contrato-fundo", formData);
-
-                string conteudoResposta = await resposta.Content.ReadAsStringAsync();
+                var resposta = await httpClient.PostAsync("https://n8n.zitec.ai/webhook/contrato-fundo", formData);
+                var conteudoResposta = await resposta.Content.ReadAsStringAsync();
 
                 Console.WriteLine("Resposta N8N:" + conteudoResposta);
-                Console.WriteLine();
-                Console.WriteLine("para o fundo" + nomeBaseSafe);
-
+                Console.WriteLine("para o fundo " + nomeFundoSafe);
             }
             catch
             {
                 Assert.Fail($"❌ Error to validate download on step '{step}'");
             }
-
-            // === Helpers ===
-            static string GetUniquePath(string path)
-            {
-                if (!File.Exists(path)) return path;
-                var dir = Path.GetDirectoryName(path)!;
-                var name = Path.GetFileNameWithoutExtension(path);
-                var ext = Path.GetExtension(path);
-                int i = 1;
-                string candidate;
-                do { candidate = Path.Combine(dir, $"{name} ({i++}){ext}"); }
-                while (File.Exists(candidate));
-                return candidate;
-            }
-
-            static DateTime? TryParseDateFromFileName(string fullPath, string nomeBaseSafe)
-            {
-                // Formato esperado: "<nomeBaseSafe>_<data>.pdf"
-                var file = Path.GetFileNameWithoutExtension(fullPath);
-                var idx = file.LastIndexOf('_');
-                if (idx < 0) return null;
-                var datePart = file[(idx + 1)..];
-
-                return TryParseDateFlexible(datePart);
-            }
-
-            static DateTime? TryParseDateFlexible(string s)
-            {
-                // Aceita vários formatos comuns: 2025-10-17, 17-10-2025, 17/10/2025, 20251017 etc.
-                var formats = new[]
-                {
-            "yyyy-MM-dd","dd-MM-yyyy","dd/MM/yyyy","yyyyMMdd","ddMMyyyy","dd_MM_yyyy","yyyy_MM_dd"
-        };
-                if (DateTime.TryParseExact(s, formats, CultureInfo.InvariantCulture,
-                                           DateTimeStyles.None, out var dt))
-                    return dt;
-                // fallback
-                if (DateTime.TryParse(s, out dt)) return dt;
-                return null;
-            }
         }
+
+        public async Task RelevantFactFlow()
+        {
+            if (!await page.FrameLocator("frame[name=\"Main\"]").Locator(_el.ButtonRelevantFact).IsVisibleAsync())
+            {
+                return;
+            }
+
+            await ClickInFrame(_el.ButtonRelevantFact, "Click on Relevant Fact to redirect to list of able documents to download");
+            await Task.Delay(2500);
+            string referenceDate = await page.FrameLocator("frame[name=\"Main\"]").Locator(_el.ReferenceDateFact).InnerTextAsync();
+            referenceDate = referenceDate.Trim()
+                .Replace("/", "");
+            await ClickInFrame(_el.ButtonToRedirectDownloaderFact, "Click on link to redirect to page with button to download relevant fact");
+            await Task.Delay(1000);
+            for (var i = 0; i < 2; i++)
+            {
+                try
+                {
+                    var frame = page.FrameLocator("iframe");
+                    var saveButton = frame
+                        .Locator("pdf-viewer")
+                        .Locator("viewer-download-controls")
+                        .Locator("#save");
+
+
+                    await saveButton.ClickAsync();
+                    //await Click(_el.ButtonDownloadFact, "Click on button to download relevant fact");
+                }
+                catch
+                {
+                    continue;
+                }
+            }
+
+        }
+
     }
 }
 

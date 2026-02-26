@@ -15,6 +15,7 @@ namespace GetRegulationsIdctvm.tests
             var home = new HomePage(firstPage);
             await home.NavigateHomeAsync();
             var total = await home.GetTotalAsync();
+            //List<string> nameOfFunds = await home.GetFundsName();
             await CloseBrowserAsync();
 
             for (int i = 1; i < total; i++)

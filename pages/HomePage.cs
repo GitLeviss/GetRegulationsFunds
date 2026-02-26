@@ -34,6 +34,22 @@ namespace GetRegulationsIdctvm.pages
             return total;
         }
 
+        public async Task<List<string>> GetFundsName()
+        {
+            var nameInTable = page.FrameLocator("frame[name=\"Main\"]").Locator(el.NameFundsInTable);
+            var count = await nameInTable.CountAsync();
+            List<string> nameOfFund = new List<string>();
+
+            for (int i = 0; i < count; i++)
+            {
+                var fundName = await nameInTable.Nth(i).InnerTextAsync();
+                nameOfFund.Add(fundName);
+                Console.WriteLine(fundName);
+            }
+
+            return nameOfFund;
+        }
+
         public async Task ProcessRowAsync(int i, Utils.DownloadSummary summary)
         {
             string fundName = "Desconhecido";
@@ -44,6 +60,8 @@ namespace GetRegulationsIdctvm.pages
                 string CnpjFund = await page.FrameLocator("frame[name=\"Main\"]").Locator(el.CnpjFundOnTable(i.ToString())).InnerTextAsync();
 
                 await utils.ClickInFrame(el.NameFundOnTable(i.ToString()), $"click on table position {i} at document manager page");
+
+                //await utils.RelevantFactFlow();
 
                 var popupTask = page.Context.WaitForPageAsync();
                 await Task.Delay(4000);

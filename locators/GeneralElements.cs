@@ -13,6 +13,7 @@
         public string ButtonClickHere { get; } = "//a[text()='clique aqui']";
         public string ButtonClickFundsdotNet { get; } = "//a[text()=' Fundos.NET ']";
         public string Table { get; } = "//tbody//tr";
+        public string NameFundsInTable { get; } = "//tbody//tr//td[2]";
         public string RegulationsField { get; } = "//input[@type='search']";
         public string FirstRegulation { get; } = "(//tbody//tr)[1]//td[2]";
         public string FirstName { get; } = "(//tbody//tr)[1]//td[1]";
@@ -26,6 +27,15 @@
         public string DateReference { get; } = "//td[normalize-space(text())='Ativo']/ancestor::tr//td[2]";
         public string ButtonAction { get; } = "//td[normalize-space(text())='Ativo']/ancestor::tr//td[5]//a";
         public string ButtonDownloadRegulationOfFund { get; } = "//div[@data-ng-show]//a[@title='Download do Arquivo']";
+        public string ButtonRelevantFact { get; } = "//font[normalize-space(text())='Fato Relevante']";
+        public string ButtonToRedirectDownloaderFact { get; } = "(//a[normalize-space(text())='FATO RELEVANTE'])[1]";
+        public string ReferenceDateFact { get; } = "((//td//b)[2]/ancestor::tbody//tr//td)[5]";
+        public string ButtonDownloadFact { get; } = "#save";
+
+        //await page.GoBackAsync(); voltar na pagina
+
+
+
 
     }
 }
