@@ -119,7 +119,7 @@ namespace GetRegulationsIdctvm.pages
                     await popup.CloseAsync();
                     return;
                 }
-
+                await Task.Delay(1500);
                 string referenceDate = await popup.Locator(el.ReferenceDateOnTable(fundName)).InnerTextAsync();
                 if (referenceDate is null)
                 {
